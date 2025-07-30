@@ -12,6 +12,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -30,12 +31,22 @@ model Deck {
 }
 
 model Slide {
-  id           String   @id @default(uuid())
-  deck         Deck     @relation(fields: [deckId], references: [id])
+  id           String         @id @default(uuid())
+  deck         Deck           @relation(fields: [deckId], references: [id])
   deckId       String
   title        String
   content      String
   speakerNotes String?
-  orderIndex   Int      @default(0)
+  orderIndex   Int            @default(0)
+  createdAt    DateTime       @default(now())
+  versions     SlideVersion[]
+}
+
+model SlideVersion {
+  id           String   @id @default(uuid())
+  slide        Slide    @relation(fields: [slideId], references: [id], onDelete: Cascade)
+  slideId      String
+  content      String
+  speakerNotes String?
   createdAt    DateTime @default(now())
 }
