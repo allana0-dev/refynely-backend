@@ -27,14 +27,18 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.13.0",
+    "@types/pdfkit": "^0.17.2",
     "firebase": "^12.0.0",
     "firebase-admin": "^13.4.0",
     "mammoth": "^1.9.1",
     "node-fetch": "^3.3.2",
     "openai": "^5.10.2",
     "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.17.1",
+    "pptxgenjs": "^4.0.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "stream-buffers": "^3.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

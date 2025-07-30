@@ -7,8 +7,12 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { DeckService } from './deck.service';
+import { ExportService } from '../export/export.service';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateDeckDto } from './dto/create-deck.dto';
@@ -18,7 +22,10 @@ import { ReorderSlidesDto } from './dto/reorder-slides.dto';
 @Controller('decks')
 @UseGuards(FirebaseAuthGuard)
 export class DeckController {
-  constructor(private readonly deckService: DeckService) {}
+  constructor(
+    private readonly deckService: DeckService,
+    private readonly exportService: ExportService,
+  ) {}
 
   @Post()
   create(@CurrentUser('id') userId: string, @Body() dto: CreateDeckDto) {
@@ -56,5 +63,28 @@ export class DeckController {
     @Body() dto: ReorderSlidesDto,
   ) {
     return this.deckService.reorderSlides(userId, deckId, dto);
+  }
+  @Get(':id/export')
+  async export(
+    @Param('id') deckId: string,
+    @Query('format') format: 'pdf' | 'pptx',
+    @Res() res: Response,
+  ) {
+    if (format === 'pdf') {
+      const pdfBuffer = await this.exportService.toPdf(deckId);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${deckId}.pdf"`,
+      });
+      return res.send(pdfBuffer);
+    }
+
+    const pptxBuffer = await this.exportService.toPptx(deckId);
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'Content-Disposition': `attachment; filename="${deckId}.pptx"`,
+    });
+    return res.send(pptxBuffer);
   }
 }
