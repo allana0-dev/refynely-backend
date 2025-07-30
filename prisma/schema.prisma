@@ -30,11 +30,12 @@ model Deck {
 }
 
 model Slide {
-  id        String   @id @default(uuid())
-  deck      Deck     @relation(fields: [deckId], references: [id])
-  deckId    String
-  title     String
-  content   String
+  id           String   @id @default(uuid())
+  deck         Deck     @relation(fields: [deckId], references: [id])
+  deckId       String
+  title        String
+  content      String
   speakerNotes String?
-  createdAt DateTime @default(now())
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
 }

@@ -29,7 +29,10 @@
     "@prisma/client": "^6.13.0",
     "firebase": "^12.0.0",
     "firebase-admin": "^13.4.0",
+    "mammoth": "^1.9.1",
     "node-fetch": "^3.3.2",
+    "openai": "^5.10.2",
+    "pdf-parse": "^1.1.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -43,6 +46,7 @@
     "@swc/core": "^1.10.7",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",

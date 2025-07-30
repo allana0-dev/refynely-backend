@@ -28,7 +28,6 @@ export class FirebaseAuthGuard implements CanActivate {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const { uid, email, name } = decodedToken;
 
-      // Upsert user in DB
       const user = await this.prisma.user.upsert({
         where: { id: uid },
         update: {},
