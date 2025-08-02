@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 
-// Firebase config from your Firebase Console
 const firebaseConfig = {
   apiKey: 'AIzaSyA1KvAfOhfplwQNoIKokk2ViCxZ1qDH9gE',
   authDomain: 'refynely.firebaseapp.com',
@@ -16,7 +15,6 @@ async function run() {
 
   const userCredential = await signInWithCustomToken(auth, customToken);
   const idToken = await userCredential.user.getIdToken();
-  console.log('\n✅ Firebase ID Token:\n', idToken);
 }
 
 run().catch(console.error);

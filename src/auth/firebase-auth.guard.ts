@@ -5,27 +5,30 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import admin from '../firebase/firebase-admin';
+import { FirebaseAdmin } from '../firebase/firebase-admin';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly firebaseAdmin: FirebaseAdmin,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();
     const authHeader = req.headers.authorization;
-
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid token');
     }
 
     const idToken = authHeader.split('Bearer ')[1];
-    console.log('idToken', idToken);
 
     try {
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const decodedToken = await this.firebaseAdmin
+        .getAuth()
+        .verifyIdToken(idToken);
       const { uid, email, name } = decodedToken;
 
       const user = await this.prisma.user.upsert({
@@ -38,7 +41,13 @@ export class FirebaseAuthGuard implements CanActivate {
         },
       });
 
-      req.user = user;
+      req.user = {
+        id: user.id,
+        email: user.email,
+        name: user.name ?? null,
+        createdAt: user.createdAt,
+      };
+
       return true;
     } catch (err) {
       console.error(err);

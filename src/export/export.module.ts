@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ExportService } from './export.service';
-import { DeckService } from '../deck/deck.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { DeckModule } from '../deck/deck.module';
 

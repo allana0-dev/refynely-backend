@@ -1,90 +1,165 @@
+// src/deck/deck.controller.ts - Proper user access from Firebase Auth Guard
 import {
   Controller,
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
+  Put,
+  Patch,
   UseGuards,
-  Query,
-  Res,
+  Request,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { DeckService } from './deck.service';
-import { ExportService } from '../export/export.service';
-import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import { ReorderSlidesDto } from './dto/reorder-slides.dto';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
+
+// Define the user interface for type safety
+interface AuthenticatedUser {
+  id: string;
+  email: string;
+  uid: string; // Firebase UID
+  // Add other user properties as needed
+}
+
+interface RequestWithUser extends Request {
+  user: AuthenticatedUser;
+}
 
 @Controller('decks')
 @UseGuards(FirebaseAuthGuard)
 export class DeckController {
-  constructor(
-    private readonly deckService: DeckService,
-    private readonly exportService: ExportService,
-  ) {}
+  constructor(private readonly deckService: DeckService) {}
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() dto: CreateDeckDto) {
-    return this.deckService.create(userId, dto);
+  create(
+    @Request() req: RequestWithUser,
+    @Body() createDeckDto: CreateDeckDto,
+  ) {
+    const userId = req.user.id; // or req.user.uid depending on your setup
+    console.log('Creating deck for user:', userId, req.user.email);
+    return this.deckService.create(userId, createDeckDto);
   }
 
   @Get()
-  findAll(@CurrentUser('id') userId: string) {
+  findAll(@Request() req: RequestWithUser) {
+    const userId = req.user.id;
+    console.log('Finding decks for user:', userId);
     return this.deckService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@CurrentUser('id') userId: string, @Param('id') deckId: string) {
-    return this.deckService.findOne(userId, deckId);
+  findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
+    const userId = req.user.id;
+    console.log('Finding deck:', id, 'for user:', userId);
+    return this.deckService.findOne(userId, id);
   }
 
   @Patch(':id')
   update(
-    @CurrentUser('id') userId: string,
-    @Param('id') deckId: string,
-    @Body() dto: UpdateDeckDto,
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateDeckDto: UpdateDeckDto,
   ) {
-    return this.deckService.update(userId, deckId, dto);
+    const userId = req.user.id;
+    console.log('Updating deck:', id, 'for user:', userId);
+    return this.deckService.update(userId, id, updateDeckDto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser('id') userId: string, @Param('id') deckId: string) {
-    return this.deckService.remove(userId, deckId);
+  remove(@Request() req: RequestWithUser, @Param('id') id: string) {
+    const userId = req.user.id;
+    console.log('Deleting deck:', id, 'for user:', userId);
+    return this.deckService.remove(userId, id);
   }
 
-  @Patch(':id/reorder')
-  reorder(
-    @CurrentUser('id') userId: string,
-    @Param('id') deckId: string,
-    @Body() dto: ReorderSlidesDto,
+  @Put(':id/reorder')
+  reorderSlides(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() reorderSlidesDto: ReorderSlidesDto,
   ) {
-    return this.deckService.reorderSlides(userId, deckId, dto);
+    const userId = req.user.id;
+    console.log('Reordering slides for deck:', id, 'user:', userId);
+    return this.deckService.reorderSlides(userId, id, reorderSlidesDto);
   }
-  @Get(':id/export')
-  async export(
-    @Param('id') deckId: string,
-    @Query('format') format: 'pdf' | 'pptx',
-    @Res() res: Response,
+
+  @Post(':deckId/slides/:slideId/generate-image')
+  generateSlideImage(
+    @Request() req: RequestWithUser,
+    @Param('deckId') deckId: string,
+    @Param('slideId') slideId: string,
+    @Body() body: { imagePrompt: string },
   ) {
-    if (format === 'pdf') {
-      const pdfBuffer = await this.exportService.toPdf(deckId);
-      res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${deckId}.pdf"`,
-      });
-      return res.send(pdfBuffer);
+    const userId = req.user.id;
+    console.log(
+      'Generating image for slide:',
+      slideId,
+      'deck:',
+      deckId,
+      'user:',
+      userId,
+    );
+
+    if (!body.imagePrompt) {
+      throw new Error('Image prompt is required');
     }
 
-    const pptxBuffer = await this.exportService.toPptx(deckId);
-    res.set({
-      'Content-Type':
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'Content-Disposition': `attachment; filename="${deckId}.pptx"`,
-    });
-    return res.send(pptxBuffer);
+    return this.deckService.generateSlideImage(
+      userId,
+      deckId,
+      slideId,
+      body.imagePrompt,
+    );
+  }
+
+  // Additional endpoint for debugging user info
+  @Get('user/me')
+  getCurrentUser(@Request() req: RequestWithUser) {
+    return {
+      user: req.user,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // Endpoint for updating multiple slides at once
+  @Patch(':id/slides')
+  updateSlides(
+    @Request() req: RequestWithUser,
+    @Param('id') deckId: string,
+    @Body() body: { slides: any[] },
+  ) {
+    const userId = req.user.id;
+    console.log('Updating slides for deck:', deckId, 'user:', userId);
+    return this.deckService.updateSlides(userId, deckId, body.slides);
+  }
+
+  // AI regeneration endpoint
+  @Post(':deckId/slides/:slideId/regenerate')
+  regenerateSlide(
+    @Request() req: RequestWithUser,
+    @Param('deckId') deckId: string,
+    @Param('slideId') slideId: string,
+    @Body()
+    body: {
+      currentContent?: string;
+      slideTitle?: string;
+      prompt?: string;
+    },
+  ) {
+    const userId = req.user.id;
+    console.log(
+      'Regenerating slide:',
+      slideId,
+      'for deck:',
+      deckId,
+      'user:',
+      userId,
+    );
+
+    return this.deckService.regenerateSlide(userId, deckId, slideId, body);
   }
 }

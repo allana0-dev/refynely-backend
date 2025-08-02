@@ -1,12 +1,23 @@
 // src/deck/deck.module.ts
 import { Module } from '@nestjs/common';
-import { DeckService } from './deck.service';
 import { DeckController } from './deck.controller';
-import { PrismaModule } from '../prisma/prisma.module';
+import { DeckService } from './deck.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { FirebaseAdmin } from '../firebase/firebase-admin';
+import { FirebaseService } from '../firebase/firebase.service';
+import { UploadService } from '../upload/upload.service';
+import { AiService } from '../ai/ai.service';
 
 @Module({
-  imports: [PrismaModule],
-  providers: [DeckService],
   controllers: [DeckController],
+  providers: [
+    DeckService,
+    PrismaService,
+    FirebaseAdmin,
+    FirebaseService,
+    UploadService,
+    AiService,
+  ],
+  exports: [DeckService],
 })
 export class DeckModule {}

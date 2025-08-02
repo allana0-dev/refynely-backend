@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   UseGuards,
+  Get,
 } from '@nestjs/common';
 import { SlideService } from './slide.service';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
@@ -45,5 +46,18 @@ export class SlideController {
     @Param('id') slideId: string,
   ) {
     return this.slideService.remove(userId, slideId);
+  }
+  @Get()
+  list(@CurrentUser('id') userId: string, @Param('deckId') deckId: string) {
+    return this.slideService.findAll(userId, deckId);
+  }
+
+  @Get(':id')
+  getOne(
+    @CurrentUser('id') userId: string,
+    @Param('deckId') deckId: string,
+    @Param('id') slideId: string,
+  ) {
+    return this.slideService.findOne(userId, deckId, slideId);
   }
 }

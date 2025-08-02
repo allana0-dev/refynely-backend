@@ -37,6 +37,7 @@ model Slide {
   title        String
   content      String
   speakerNotes String?
+  layout       Json?          
   orderIndex   Int            @default(0)
   createdAt    DateTime       @default(now())
   versions     SlideVersion[]

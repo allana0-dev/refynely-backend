@@ -11,6 +11,23 @@ export class SlideService {
     private readonly versionService: VersionService,
   ) {}
 
+  async findAll(userId: string, deckId: string) {
+    // optionally verify user owns the deck
+    return this.prisma.slide.findMany({
+      where: { deckId },
+      orderBy: { orderIndex: 'asc' },
+    });
+  }
+
+  /** new */
+  async findOne(userId: string, deckId: string, slideId: string) {
+    const slide = await this.prisma.slide.findFirst({
+      where: { id: slideId, deckId },
+    });
+    if (!slide) throw new NotFoundException('Slide not found');
+    return slide;
+  }
+
   async create(userId: string, deckId: string, dto: CreateSlideDto) {
     return this.prisma.slide.create({ data: { ...dto, deckId } });
   }
@@ -36,7 +53,6 @@ export class SlideService {
         .then((v) => v.id),
     );
 
-    // Proceed with update
     return this.prisma.slide.update({ where: { id: slideId }, data: dto });
   }
 
